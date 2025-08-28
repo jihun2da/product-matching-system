@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}설정 관리 - 상품 매칭 시스템{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    설정 관리
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- 설정 네비게이션 -->
+                    <div class="col-md-3">
+                        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist">
+                            <button class="nav-link active" id="v-pills-name-tab" data-bs-toggle="pill" 
+                                    data-bs-target="#v-pills-name" type="button" role="tab">
+                                <i class="fas fa-tags me-2"></i>
+                                상품명 동의어
+                            </button>
+                            <button class="nav-link" id="v-pills-size-tab" data-bs-toggle="pill" 
+                                    data-bs-target="#v-pills-size" type="button" role="tab">
+                                <i class="fas fa-ruler me-2"></i>
+                                사이즈 동의어
+                            </button>
+                            <button class="nav-link" id="v-pills-color-tab" data-bs-toggle="pill" 
+                                    data-bs-target="#v-pills-color" type="button" role="tab">
+                                <i class="fas fa-palette me-2"></i>
+                                색상 동의어
+                            </button>
+                            <button class="nav-link" id="v-pills-matching-tab" data-bs-toggle="pill" 
+                                    data-bs-target="#v-pills-matching" type="button" role="tab">
+                                <i class="fas fa-sliders-h me-2"></i>
+                                매칭 설정
+                            </button>
+                            <button class="nav-link" id="v-pills-excel-tab" data-bs-toggle="pill" 
+                                    data-bs-target="#v-pills-excel" type="button" role="tab">
+                                <i class="fas fa-file-excel me-2"></i>
+                                엑셀 색상
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 설정 내용 -->
+                    <div class="col-md-9">
+                        <div class="tab-content" id="v-pills-tabContent">
+                            <!-- 상품명 동의어 설정 -->
+                            <div class="tab-pane fade show active" id="v-pills-name" role="tabpanel">
+                                <h5 class="text-primary mb-4">
+                                    <i class="fas fa-tags me-2"></i>
+                                    상품명 동의어 관리
+                                </h5>
+                                <p class="text-muted">상품명에서 사용되는 동의어와 약어를 관리합니다. 키(왼쪽)가 표준 용어이고, 값(오른쪽)들이 동의어입니다.</p>
+                                
+                                <div id="nameSynonyms">
+                                    <!-- 동적으로 생성됨 -->
+                                </div>
+                                
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-3" id="addNameSynonym">
+                                    <i class="fas fa-plus me-1"></i>
+                                    새 동의어 그룹 추가
+                                </button>
+                            </div>
+
+                            <!-- 사이즈 동의어 설정 -->
+                            <div class="tab-pane fade" id="v-pills-size" role="tabpanel">
+                                <h5 class="text-primary mb-4">
+                                    <i class="fas fa-ruler me-2"></i>
+                                    사이즈 동의어 관리
+                                </h5>
+                                <p class="text-muted">사이즈 표기의 동의어를 관리합니다. (예: 2XL → XXL)</p>
+                                
+                                <div id="sizeSynonyms">
+                                    <!-- 동적으로 생성됨 -->
+                                </div>
+                                
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-3" id="addSizeSynonym">
+                                    <i class="fas fa-plus me-1"></i>
+                                    새 사이즈 동의어 추가
+                                </button>
+                            </div>
+
+                            <!-- 색상 동의어 설정 -->
+                            <div class="tab-pane fade" id="v-pills-color" role="tabpanel">
+                                <h5 class="text-primary mb-4">
+                                    <i class="fas fa-palette me-2"></i>
+                                    색상 동의어 관리
+                                </h5>
+                                <p class="text-muted">색상 표기의 동의어를 관리합니다. (예: gray → 회색, 그레이 → 회색)</p>
+                                
+                                <div id="colorAliases">
+                                    <!-- 동적으로 생성됨 -->
+                                </div>
+                                
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-3" id="addColorAlias">
+                                    <i class="fas fa-plus me-1"></i>
+                                    새 색상 동의어 추가
+                                </button>
+                            </div>
+
+                            <!-- 매칭 설정 -->
+                            <div class="tab-pane fade" id="v-pills-matching" role="tabpanel">
+                                <h5 class="text-primary mb-4">
+                                    <i class="fas fa-sliders-h me-2"></i>
+                                    매칭 설정
+                                </h5>
+                                <p class="text-muted">매칭 알고리즘의 임계값과 가중치를 설정합니다.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="nameScoreCutoff" class="form-label">상품명 매칭 임계값</label>
+                                            <input type="number" class="form-control" id="nameScoreCutoff" 
+                                                   min="0" max="100" value="{{ config.matching_settings.name_score_cutoff }}">
+                                            <div class="form-text">상품명 퍼지 매칭의 최소 점수 (0-100)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h6 class="text-secondary mt-4 mb-3">매칭 가중치</h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="brandWeight" class="form-label">브랜드</label>
+                                            <input type="number" class="form-control" id="brandWeight" 
+                                                   min="0" max="1" step="0.05" value="{{ config.matching_settings.weights.brand }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="nameWeight" class="form-label">상품명</label>
+                                            <input type="number" class="form-control" id="nameWeight" 
+                                                   min="0" max="1" step="0.05" value="{{ config.matching_settings.weights.name }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="colorWeight" class="form-label">색상</label>
+                                            <input type="number" class="form-control" id="colorWeight" 
+                                                   min="0" max="1" step="0.05" value="{{ config.matching_settings.weights.color }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="sizeWeight" class="form-label">사이즈</label>
+                                            <input type="number" class="form-control" id="sizeWeight" 
+                                                   min="0" max="1" step="0.05" value="{{ config.matching_settings.weights.size }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    모든 가중치의 합은 1.0이 되어야 합니다.
+                                </div>
+                            </div>
+
+                            <!-- 엑셀 색상 설정 -->
+                            <div class="tab-pane fade" id="v-pills-excel" role="tabpanel">
+                                <h5 class="text-primary mb-4">
+                                    <i class="fas fa-file-excel me-2"></i>
+                                    엑셀 색상 설정
+                                </h5>
+                                <p class="text-muted">매칭 결과 엑셀 파일에서 사용할 색상을 설정합니다. (ARGB 8자리 HEX 코드)</p>
+                                
+                                <div id="excelColors">
+                                    <!-- 동적으로 생성됨 -->
+                                </div>
+                                
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-3" id="addExcelColor">
+                                    <i class="fas fa-plus me-1"></i>
+                                    새 색상 추가
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 저장 버튼 -->
+                        <div class="mt-4 pt-4 border-top">
+                            <button type="button" class="btn btn-success btn-lg me-3" id="saveConfigBtn">
+                                <i class="fas fa-save me-2"></i>
+                                설정 저장
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-lg" id="resetConfigBtn">
+                                <i class="fas fa-undo me-2"></i>
+                                초기화
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 확인 모달 -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">확인</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">정말로 실행하시겠습니까?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" id="confirmOkBtn">확인</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/config.js') }}"></script>
+{% endblock %} 

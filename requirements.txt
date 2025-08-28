@@ -1,0 +1,6 @@
+flask==3.0.0
+pandas==2.1.4
+rapidfuzz==3.6.1
+tqdm==4.66.1
+openpyxl==3.1.2
+werkzeug==3.0.1 
