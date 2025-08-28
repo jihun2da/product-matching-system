@@ -122,10 +122,34 @@ class PerfectMatcher:
                 s = re.sub(re.escape(v), canon, s, flags=re.IGNORECASE)
         return s
 
+    def _extract_parentheses_values(self, size_token: str) -> Set[str]:
+        """
+        괄호가 포함된 사이즈에서 괄호 안팎 값을 각각 추출
+        예: '7(M)' -> {'7', 'M'}, 'M(9)' -> {'M', '9'}, 'L' -> {'L'}
+        """
+        values = set()
+        
+        # 괄호 패턴 매칭: 괄호 밖(괄호 안) 형태
+        parentheses_match = re.match(r'^([^()]+)\(([^()]+)\)$', size_token)
+        if parentheses_match:
+            outside = parentheses_match.group(1).strip()
+            inside = parentheses_match.group(2).strip()
+            if outside:
+                values.add(outside)
+            if inside:
+                values.add(inside)
+        else:
+            # 괄호가 없는 경우 그대로 추가
+            if size_token:
+                values.add(size_token)
+        
+        return values
+
     def extract_size_parts_ultra(self, s: str) -> Set[str]:
         """
         사이즈를 토큰셋으로 추출(S~XL, 5호, 110, free 등)
         - 토큰 캐논화: 2xl → xxl 등
+        - 괄호 안팎 값 분리: 7(M) -> {7, M}
         """
         if not isinstance(s, str):
             s = "" if pd.isna(s) else str(s)
@@ -136,11 +160,21 @@ class PerfectMatcher:
 
         tokens = set()
         for tok in s.split():
-            tok = re.sub(r"[^0-9a-z가-힣]+", "", tok)
+            # 기본 정리 (특수문자 제거는 괄호 처리 후에)
+            tok = tok.strip()
             if not tok:
                 continue
-            tok = self._normalize_size_token(tok)  # ★ 사이즈 캐논화
-            tokens.add(tok)
+            
+            # 괄호 안팎 값 추출
+            parentheses_values = self._extract_parentheses_values(tok)
+            
+            for value in parentheses_values:
+                # 각 값에 대해 정리 및 캐논화 적용
+                cleaned_value = re.sub(r"[^0-9a-z가-힣]+", "", value)
+                if cleaned_value:
+                    normalized_value = self._normalize_size_token(cleaned_value)  # ★ 사이즈 캐논화
+                    tokens.add(normalized_value)
+        
         return tokens
 
     # ---------- 퍼지 ----------
