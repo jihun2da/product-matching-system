@@ -114,48 +114,72 @@ def preview_files(receipt_file, matched_file):
             st.error(f"파일 읽기 오류: {str(e)}")
 
 def run_matching(receipt_file, matched_file, use_fast):
-    with st.spinner("매칭 처리 중..."):
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    try:
+        status_text.text("파일 준비 중...")
+        progress_bar.progress(10)
+        
+        # 임시 파일로 저장
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp_receipt:
+            tmp_receipt.write(receipt_file.getvalue())
+            receipt_path = tmp_receipt.name
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp_matched:
+            tmp_matched.write(matched_file.getvalue())
+            matched_path = tmp_matched.name
+        
+        progress_bar.progress(30)
+        status_text.text("매칭 엔진 초기화 중...")
+        
+        # 출력 파일 경로
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_receipt = f"temp_receipt_{timestamp}.xlsx"
+        output_matched = f"temp_matched_{timestamp}.xlsx"
+        
+        progress_bar.progress(50)
+        status_text.text("매칭 처리 중...")
+        
+        # 매칭 실행
+        matcher = PerfectSolutionMatcher()
+        matched_count, match_results = matcher.process_excel_perfect_solution(
+            receipt_path, matched_path, output_receipt, output_matched, use_fast=use_fast
+        )
+        
+        progress_bar.progress(80)
+        status_text.text("결과 처리 중...")
+        
+        # 리포트 생성
+        report = matcher.generate_match_report(match_results)
+        
+        # 결과 저장
+        st.session_state.match_results = {
+            'matched_count': matched_count,
+            'report': report,
+            'output_receipt': output_receipt,
+            'output_matched': output_matched,
+            'timestamp': timestamp
+        }
+        
+        progress_bar.progress(100)
+        status_text.text("완료!")
+        
+        # 임시 파일 정리
         try:
-            # 임시 파일로 저장
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp_receipt:
-                tmp_receipt.write(receipt_file.getvalue())
-                receipt_path = tmp_receipt.name
-            
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp_matched:
-                tmp_matched.write(matched_file.getvalue())
-                matched_path = tmp_matched.name
-            
-            # 출력 파일 경로
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_receipt = f"temp_receipt_{timestamp}.xlsx"
-            output_matched = f"temp_matched_{timestamp}.xlsx"
-            
-            # 매칭 실행
-            matcher = PerfectSolutionMatcher()
-            matched_count, match_results = matcher.process_excel_perfect_solution(
-                receipt_path, matched_path, output_receipt, output_matched, use_fast=use_fast
-            )
-            
-            # 리포트 생성
-            report = matcher.generate_match_report(match_results)
-            
-            # 결과 저장
-            st.session_state.match_results = {
-                'matched_count': matched_count,
-                'report': report,
-                'output_receipt': output_receipt,
-                'output_matched': output_matched,
-                'timestamp': timestamp
-            }
-            
-            # 임시 파일 정리
             os.unlink(receipt_path)
             os.unlink(matched_path)
-            
-            st.success("🎉 매칭 완료!")
-            
-        except Exception as e:
-            st.error(f"매칭 중 오류 발생: {str(e)}")
+        except:
+            pass  # 파일 삭제 실패해도 무시
+        
+        st.success("🎉 매칭 완료!")
+        
+    except Exception as e:
+        st.error(f"매칭 중 오류 발생: {str(e)}")
+        st.error(f"상세 오류: {type(e).__name__}")
+    finally:
+        progress_bar.empty()
+        status_text.empty()
 
 def display_results():
     results = st.session_state.match_results
